@@ -2,13 +2,16 @@
 SupplySight — Database Configuration & Initialization (PostgreSQL)
 """
 import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
+
+load_dotenv()
 
 # ─── PostgreSQL Connection ──────────────────────────────────────────
 # Change these to match YOUR PostgreSQL credentials:
 DB_USER = os.getenv("SUPPLYSIGHT_DB_USER", "postgres")
-DB_PASS = os.getenv("SUPPLYSIGHT_DB_PASS", "Tarun_2006")
+DB_PASS = os.getenv("SUPPLYSIGHT_DB_PASS", "")
 DB_HOST = os.getenv("SUPPLYSIGHT_DB_HOST", "localhost")
 DB_PORT = os.getenv("SUPPLYSIGHT_DB_PORT", "5432")
 DB_NAME = os.getenv("SUPPLYSIGHT_DB_NAME", "supplysight")
