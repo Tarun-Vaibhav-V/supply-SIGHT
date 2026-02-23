@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SupplySight — Real-time supply chain monitoring dashboard with risk detection.">
+    <title>SupplySight — Supply Chain Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <!-- TOPBAR -->
+    <header class="topbar">
+        <div class="logo">⚡ SupplySight</div>
+        <div class="search-wrap">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+            </svg>
+            <input id="globalSearch" type="text" placeholder="Search products, suppliers, shipments..."
+                autocomplete="off" />
+        </div>
+        <div class="header-right">
+            <div class="pulse-indicator"><span class="pulse-dot"></span><span>Live</span></div>
+            <div class="last-updated" id="lastUpdated"></div>
+        </div>
+    </header>
+
+    <!-- INSIGHT BANNER -->
+    <div class="insight-banner" id="insightBanner"></div>
+
+    <!-- DASHBOARD -->
+    <main class="dashboard">
+
+        <!-- Filters -->
+        <section class="filters-bar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+            </svg>
+            <label>Filters</label>
+            <select id="filter-warehouse" class="filter-select">
+                <option value="">All Warehouses</option>
+            </select>
+            <select id="filter-supplier" class="filter-select">
+                <option value="">All Suppliers</option>
+            </select>
+            <select id="filter-severity" class="filter-select">
+                <option value="">All Severities</option>
+                <option value="Critical">Critical</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+            </select>
+        </section>
+
+        <!-- KPI Cards Row 1: Counts -->
+        <section class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.8">
+                        <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
+                        <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
+                        <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" />
+                        <path d="M10 6h4" />
+                        <path d="M10 10h4" />
+                        <path d="M10 14h4" />
+                        <path d="M10 18h4" />
+                    </svg>
+                </div>
+                <div class="kpi-info">
+                    <span class="kpi-value" id="val-companies"><span class="skeleton-kpi"></span></span>
+                    <span class="kpi-label">Companies</span>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.8">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                </div>
+                <div class="kpi-info">
+                    <span class="kpi-value" id="val-suppliers"><span class="skeleton-kpi"></span></span>
+                    <span class="kpi-label">Suppliers</span>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.8">
+                        <path
+                            d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                        <path d="m3.3 7 8.7 5 8.7-5" />
+                        <path d="M12 22V12" />
+                    </svg>
+                </div>
+                <div class="kpi-info">
+                    <span class="kpi-value" id="val-products"><span class="skeleton-kpi"></span></span>
+                    <span class="kpi-label">Products</span>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.8">
+                        <path
+                            d="M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35A2 2 0 0 1 3.26 6.5l8-3.2a2 2 0 0 1 1.48 0l8 3.2A2 2 0 0 1 22 8.35Z" />
+                        <path d="M6 18h12" />
+                        <path d="M6 14h12" />
+                    </svg>
+                </div>
+                <div class="kpi-info">
+                    <span class="kpi-value" id="val-warehouses"><span class="skeleton-kpi"></span></span>
+                    <span class="kpi-label">Warehouses</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- KPI Cards Row 2: Alerts -->
+        <section class="kpi-grid">
+            <div class="kpi-card alert-card">
+                <div class="kpi-icon icon-warning">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.8">
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                        <path d="M12 9v4" />
+                        <path d="M12 17h.01" />
+                    </svg>
+                </div>
+                <div class="kpi-info">
+                    <span class="kpi-value" id="val-low-inventory"><span class="skeleton-kpi"></span></span>
+                    <span class="kpi-label">Low Inventory</span>
+                    <span class="kpi-trend" id="trend-low-inv"></span>
+                </div>
+            </div>
+            <div class="kpi-card alert-card">
+                <div class="kpi-icon icon-danger">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.8">
+                        <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" />
+                        <path d="M15 18H9" />
+                        <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14" />
+                        <circle cx="17" cy="18" r="2" />
+                        <circle cx="7" cy="18" r="2" />
+                    </svg>
+                </div>
+                <div class="kpi-info">
+                    <span class="kpi-value" id="val-delayed"><span class="skeleton-kpi"></span></span>
+                    <span class="kpi-label">Delayed Shipments</span>
+                    <span class="kpi-trend" id="trend-delayed"></span>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon icon-info">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.8">
+                        <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                        <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                        <path d="M10 13H8" />
+                        <path d="M16 13h-2" />
+                        <path d="M10 17H8" />
+                        <path d="M16 17h-2" />
+                    </svg>
+                </div>
+                <div class="kpi-info">
+                    <span class="kpi-value" id="val-orders"><span class="skeleton-kpi"></span></span>
+                    <span class="kpi-label">Total Orders</span>
+                </div>
+            </div>
+            <div class="kpi-card alert-card">
+                <div class="kpi-icon icon-danger">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.8">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+                        <path d="m9 12 2 2 4-4" />
+                    </svg>
+                </div>
+                <div class="kpi-info">
+                    <span class="kpi-value" id="val-risks"><span class="skeleton-kpi"></span></span>
+                    <span class="kpi-label">Open Risks</span>
+                    <span class="kpi-trend" id="trend-risks"></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts -->
+        <div class="section-title">📊 Analytics</div>
+        <section class="grid-charts">
+            <div class="card">
+                <div class="card-header">
+                    <h2>📦 Inventory Stock Levels</h2>
+                </div>
+                <div class="chart-container"><canvas id="chart-inventory"></canvas></div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2>🚚 Shipment Delay Distribution</h2>
+                </div>
+                <div class="chart-container"><canvas id="chart-delays"></canvas></div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2>🤝 Supplier Reliability</h2>
+                </div>
+                <div class="chart-container"><canvas id="chart-reliability"></canvas></div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2>🛡️ Risk Severity Breakdown</h2>
+                </div>
+                <div class="chart-container"><canvas id="chart-risk-severity"></canvas></div>
+            </div>
+        </section>
+
+        <!-- Low Inventory + Delayed Shipments -->
+        <div class="section-title">⚠️ Risk Alerts</div>
+        <section class="grid-2col">
+            <div class="card">
+                <div class="card-header">
+                    <h2>📉 Low Inventory</h2>
+                    <span class="badge badge-warning" id="badge-low-inv">—</span>
+                </div>
+                <div class="card-body table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Warehouse</th>
+                                <th>Stock Level</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-low-inv">
+                            <tr class="skeleton-row">
+                                <td colspan="4">
+                                    <div class="skeleton"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="empty-state" id="empty-low-inv" style="display:none">
+                        <h3>✅ All inventory levels healthy</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2>🚚 Delayed Shipments</h2>
+                    <span class="badge badge-danger" id="badge-delayed">—</span>
+                </div>
+                <div class="card-body table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Product</th>
+                                <th>Supplier</th>
+                                <th>Expected</th>
+                                <th>Overdue</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-delayed">
+                            <tr class="skeleton-row">
+                                <td colspan="5">
+                                    <div class="skeleton"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="empty-state" id="empty-delayed" style="display:none">
+                        <h3>✅ No delayed shipments</h3>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recent Orders + New Order Form -->
+        <div class="section-title">📋 Operations</div>
+        <section>
+            <div class="card">
+                <div class="card-header">
+                    <h2>📋 Recent Orders</h2>
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <span class="badge badge-info" id="badge-orders">—</span>
+                        <button class="btn btn-gold" onclick="toggleOrderForm()">+ New Order</button>
+                    </div>
+                </div>
+
+                <!-- Inline Order Form (hidden by default) -->
+                <div class="order-form" id="orderForm" style="display:none">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="order-company">Company</label>
+                            <select id="order-company" class="form-input"></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="order-product">Product</label>
+                            <select id="order-product" class="form-input"></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="order-qty">Quantity</label>
+                            <input id="order-qty" type="number" min="1" value="1" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="order-priority">Priority</label>
+                            <select id="order-priority" class="form-input">
+                                <option value="Low">Low</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="High">High</option>
+                                <option value="Critical">Critical</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-gold" onclick="submitOrder()">📦 Place Order</button>
+                        <button class="btn btn-muted" onclick="toggleOrderForm()">Cancel</button>
+                        <span id="order-status" class="form-status"></span>
+                    </div>
+                </div>
+
+                <div class="card-body table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Company</th>
+                                <th>Product</th>
+                                <th>Qty</th>
+                                <th>Date</th>
+                                <th>Fulfill By</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-orders">
+                            <tr class="skeleton-row">
+                                <td colspan="8">
+                                    <div class="skeleton"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Supplier Reliability -->
+        <section>
+            <div class="card">
+                <div class="card-header">
+                    <h2>🤝 Supplier Reliability</h2>
+                </div>
+                <div class="card-body table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Supplier</th>
+                                <th>Company</th>
+                                <th>Country</th>
+                                <th>Reliability</th>
+                                <th>Lead Time</th>
+                                <th>Shipments</th>
+                                <th>Delivered</th>
+                                <th>Delayed</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-suppliers">
+                            <tr class="skeleton-row">
+                                <td colspan="9">
+                                    <div class="skeleton"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Risk Events -->
+        <section>
+            <div class="card">
+                <div class="card-header">
+                    <h2>🛡️ Risk Events Log</h2>
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <span class="badge badge-danger" id="badge-risks">—</span>
+                        <button class="btn btn-gold" onclick="scanForRisks()">🔍 Scan for Risks</button>
+                    </div>
+                </div>
+                <div class="card-body table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Entity</th>
+                                <th>Type</th>
+                                <th>Severity</th>
+                                <th>Detected</th>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-risks">
+                            <tr class="skeleton-row">
+                                <td colspan="8">
+                                    <div class="skeleton"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast notification -->
+    <div id="toast" class="toast"></div>
+
+    <footer class="footer">SupplySight v2.0 — Supply Chain Monitoring System © 2026</footer>
+    <script src="/static/script.js"></script>
+</body>
+
+</html>
