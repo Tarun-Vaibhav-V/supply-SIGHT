@@ -47,12 +47,19 @@ def init_db():
     Only seeds if the 'company' table is empty (first run).
     """
     schema_sql = _read_sql_file("schema.sql")
+    user_schema_sql = _read_sql_file("user_schema.sql")
     seed_sql = _read_sql_file("seed_data.sql")
     advanced_sql = _read_sql_file("advanced_features.sql")
 
     with engine.begin() as conn:
         # Step 1: Create tables
         for statement in schema_sql.split(";"):
+            stmt = statement.strip()
+            if stmt:
+                conn.execute(text(stmt))
+
+        # Step 1b: Create user table
+        for statement in user_schema_sql.split(";"):
             stmt = statement.strip()
             if stmt:
                 conn.execute(text(stmt))

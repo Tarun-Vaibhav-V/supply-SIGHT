@@ -1,0 +1,427 @@
+/* ═══════════════════════════════════════════════════════════════
+   SupplySight — Dashboard Styles
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Layout ─────────────────────────────────────────────────── */
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+    background: rgba(8, 8, 10, 0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+}
+
+.topbar .logo {
+    font-size: 1.25rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--gold), var(--gold-hover));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.topbar .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    transition: var(--transition);
+}
+
+.user-menu:hover {
+    border-color: var(--border);
+    background: var(--bg-card);
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #000;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.user-role {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.pulse-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--safe);
+    font-weight: 500;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--safe);
+    border-radius: 50%;
+    animation: pulse-glow 2s infinite;
+}
+
+.dashboard {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 28px;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 32px 0 16px;
+    color: var(--text-primary);
+}
+
+/* ─── KPI Grid ───────────────────────────────────────────────── */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.kpi-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    transition: var(--transition);
+}
+
+.kpi-card:hover {
+    border-color: rgba(245, 197, 24, 0.2);
+    transform: translateY(-2px);
+}
+
+.kpi-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-sm);
+    background: var(--gold-glow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gold);
+    flex-shrink: 0;
+}
+
+.kpi-icon.icon-warning {
+    background: var(--warning-bg);
+    color: var(--warning);
+}
+
+.kpi-icon.icon-danger {
+    background: var(--danger-bg);
+    color: var(--danger);
+}
+
+.kpi-icon.icon-info {
+    background: var(--info-bg);
+    color: var(--info);
+}
+
+.kpi-value {
+    display: block;
+    font-size: 1.75rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.kpi-label {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* ─── Charts Grid ────────────────────────────────────────────── */
+.grid-charts {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.chart-container {
+    padding: 16px 0;
+    height: 280px;
+    position: relative;
+}
+
+/* ─── Two Column Grid ────────────────────────────────────────── */
+.grid-2col {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+/* ─── Card Header ────────────────────────────────────────────── */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.card-header h2 {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* ─── Insight Banner ─────────────────────────────────────────── */
+.insight-banner {
+    margin-bottom: 20px;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, rgba(245, 197, 24, 0.08), rgba(245, 197, 24, 0.03));
+    border: 1px solid rgba(245, 197, 24, 0.15);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    color: var(--gold);
+}
+
+/* ─── Dropdown menu ──────────────────────────────────────────── */
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px;
+    min-width: 160px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    animation: fadeInUp 0.15s ease;
+    z-index: 200;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border: none;
+    background: none;
+    width: 100%;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: var(--transition);
+}
+
+.dropdown-item:hover {
+    background: var(--bg-input);
+    color: var(--text-primary);
+}
+
+.dropdown-item.danger {
+    color: var(--danger);
+}
+
+.dropdown-item.danger:hover {
+    background: var(--danger-bg);
+}
+
+/* ─── Loading Skeleton ───────────────────────────────────────── */
+.skeleton {
+    height: 16px;
+    background: linear-gradient(90deg, var(--bg-input) 0%, var(--bg-card-hover) 50%, var(--bg-input) 100%);
+    background-size: 200px 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+}
+
+.skeleton-kpi {
+    display: inline-block;
+    width: 60px;
+    height: 28px;
+    background: linear-gradient(90deg, var(--bg-input) 0%, var(--bg-card-hover) 50%, var(--bg-input) 100%);
+    background-size: 200px 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+}
+
+/* ─── Data Cards ─────────────────────────────────────────────── */
+.data-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.data-cards-grid-wide {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.data-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    transition: var(--transition);
+}
+
+.data-card:hover {
+    border-color: rgba(245, 197, 24, 0.15);
+    transform: translateY(-1px);
+}
+
+.data-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.data-card-title {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--text-primary);
+}
+
+.data-card-meta {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.data-card-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin: 6px 0;
+    line-height: 1.45;
+}
+
+.data-card-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+}
+
+/* ─── Stock Gauge ────────────────────────────────────────────── */
+.stock-gauge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.stock-gauge-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--bg-input);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.stock-gauge-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+.stock-gauge-text {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+/* ─── Risk Card Severity Borders ─────────────────────────────── */
+.risk-card-critical {
+    border-left: 3px solid var(--danger);
+}
+
+.risk-card-high {
+    border-left: 3px solid var(--warning);
+}
+
+.risk-card-medium {
+    border-left: 3px solid var(--info);
+}
+
+.risk-card-low {
+    border-left: 3px solid var(--safe);
+}
+
+/* ─── Empty State ────────────────────────────────────────────── */
+.empty-state {
+    text-align: center;
+    padding: 24px 16px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .grid-charts,
+    .grid-2col {
+        grid-template-columns: 1fr;
+    }
+
+    .data-cards-grid-wide {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .data-cards-grid-wide {
+        grid-template-columns: 1fr;
+    }
+}
