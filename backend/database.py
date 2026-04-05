@@ -48,6 +48,7 @@ def init_db():
     """
     schema_sql = _read_sql_file("schema.sql")
     user_schema_sql = _read_sql_file("user_schema.sql")
+    subscription_sql = _read_sql_file("subscription_schema.sql")
     seed_sql = _read_sql_file("seed_data.sql")
     advanced_sql = _read_sql_file("advanced_features.sql")
 
@@ -63,6 +64,13 @@ def init_db():
             stmt = statement.strip()
             if stmt:
                 conn.execute(text(stmt))
+
+        # Step 1c: Create subscription tables & seed plans
+        for statement in subscription_sql.split(";"):
+            stmt = statement.strip()
+            if stmt:
+                conn.execute(text(stmt))
+        print("✅ Subscription plans loaded.")
 
         # Step 2: Seed data (only on first run)
         result = conn.execute(text("SELECT COUNT(*) FROM company"))

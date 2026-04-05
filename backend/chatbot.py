@@ -24,7 +24,7 @@ Answer questions accurately using ONLY the data provided in the context.
 If the data doesn't contain the answer, say so honestly.
 Keep responses concise, professional, and actionable.
 Use bullet points and formatting for clarity.
-When referring to specific numbers, cite the source entity. Make sure to sarcastically roast the user every time"""
+When referring to specific numbers, cite the source entity. """
 
 
 def _fetch_context(db: Session, user: dict) -> str:
@@ -140,23 +140,28 @@ def _fetch_context(db: Session, user: dict) -> str:
         print(f"[RAG ERROR] Shipments: {e}")
 
     try:
-        # Risk Events
-        q = """
-            SELECT r.risk_id, r.risk_type, r.risk_severity, r.description, r.resolution_status, r.detected_date,
-                   r.entity_type, r.entity_id
-            FROM risk_event r WHERE 1=1
-        """
-        # Risk scoping is tricky because it references multiple entities.
-        # For now, we'll fetch all and filter in app logic if needed, or join on supplier for specific entities.
-        # Let's just fetch last 15 for admin, and for user we'll attempt a broad filter if company_id is present.
+        # Risk Events — scoped by company via entity→supplier chain
         if not is_admin:
-            # Simple heuristic: if we can join through a table to get company_id, do it.
-            # But risk_event is designed to be polymorphic (entity_id).
-            # We'll just fetch all but mention the scoping.
-            q += " ORDER BY r.detected_date DESC LIMIT 15"
-            rows = db.execute(text(q)).fetchall()
+            q = """
+                SELECT DISTINCT r.risk_id, r.risk_type, r.risk_severity, r.description,
+                       r.resolution_status, r.detected_date, r.entity_type, r.entity_id
+                FROM risk_event r
+                LEFT JOIN shipment sh ON r.entity_type = 'Shipment' AND r.entity_id = sh.shipment_id
+                LEFT JOIN inventory inv ON r.entity_type = 'Inventory' AND r.entity_id = inv.inventory_id
+                LEFT JOIN product p_inv ON inv.product_id = p_inv.product_id
+                LEFT JOIN supplier s ON sh.supplier_id = s.supplier_id
+                                     OR p_inv.supplier_id = s.supplier_id
+                WHERE s.company_id = :cid
+                ORDER BY r.detected_date DESC LIMIT 15
+            """
+            rows = db.execute(text(q), {"cid": company_id}).fetchall()
         else:
-            q += " ORDER BY r.detected_date DESC LIMIT 15"
+            q = """
+                SELECT r.risk_id, r.risk_type, r.risk_severity, r.description,
+                       r.resolution_status, r.detected_date, r.entity_type, r.entity_id
+                FROM risk_event r
+                ORDER BY r.detected_date DESC LIMIT 15
+            """
             rows = db.execute(text(q)).fetchall()
         if rows:
             context_parts.append("## Risk Events\n" + "\n".join(
@@ -265,7 +270,6 @@ def chat(message: str, history: list, db: Session, user: dict) -> str:
         print(f"[CHATBOT ERROR] {error_str}")
         print(traceback.format_exc())
 
-        # Provide user-friendly error messages
         if "quota" in error_str.lower() or "rate" in error_str.lower() or "429" in error_str:
             return "⚠️ Rate limit reached. The free Gemini API has usage limits. Please wait a moment and try again."
         elif "API_KEY_INVALID" in error_str or "invalid" in error_str.lower() and "key" in error_str.lower():

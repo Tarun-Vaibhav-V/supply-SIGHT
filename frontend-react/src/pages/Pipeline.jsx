@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useFilters } from '../context/FilterContext';
+import { useAuth } from '../context/AuthContext';
 import {
     getCompanies,
     getSuppliers,
@@ -20,6 +21,9 @@ const STAGES = [
 
 export default function Pipeline() {
     const { filters } = useFilters();
+    const { user } = useAuth();
+    const isAdmin = user?.role === 'admin';
+    const stages = isAdmin ? STAGES : STAGES.filter(s => s.key !== 'companies');
     const [data, setData] = useState({});
     const [summary, setSummary] = useState(null);
     const [activeStage, setActiveStage] = useState(null);
@@ -130,7 +134,7 @@ export default function Pipeline() {
             <div className="pipeline-detail">
                 <div className="pipeline-detail-header">
                     <span className="pipeline-detail-title">
-                        {STAGES.find((s) => s.key === activeStage)?.icon} {STAGES.find((s) => s.key === activeStage)?.label} ({items.length})
+                        {stages.find((s) => s.key === activeStage)?.icon} {stages.find((s) => s.key === activeStage)?.label} ({items.length})
                     </span>
                     <button className="pipeline-detail-close" onClick={() => setActiveStage(null)}>✕ Close</button>
                 </div>
@@ -216,7 +220,7 @@ export default function Pipeline() {
 
             {/* Flow Diagram */}
             <div className="pipeline-flow">
-                {STAGES.map((stage, i) => {
+                {stages.map((stage, i) => {
                     const health = getHealth(stage.key);
                     return (
                         <div className="flow-step" key={stage.key}>

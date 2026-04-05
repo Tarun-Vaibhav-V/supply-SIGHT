@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { FilterProvider } from './context/FilterContext';
+import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import DashboardLayout from './components/Layout/DashboardLayout';
@@ -42,6 +43,9 @@ function PublicRoute({ children }) {
 function AppRoutes() {
   return (
     <Routes>
+      {/* Landing page — public root */}
+      <Route path="/" element={<Landing />} />
+
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
 
@@ -53,8 +57,7 @@ function AppRoutes() {
         <Route path="/company/:id" element={<CompanyDetail />} />
       </Route>
 
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

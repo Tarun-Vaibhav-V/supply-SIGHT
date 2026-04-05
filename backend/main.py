@@ -16,6 +16,7 @@ import os
 
 from backend.database import get_db, init_db
 from backend.auth import router as auth_router, get_current_user
+from backend.subscription import router as subscription_router
 from backend.chatbot import chat as chatbot_chat
 
 
@@ -60,6 +61,7 @@ app.add_middleware(
 
 # Mount auth router
 app.include_router(auth_router)
+app.include_router(subscription_router)
 
 
 # ─── Helpers ────────────────────────────────────────────────────────
@@ -82,8 +84,23 @@ def get_company_filter(user: dict) -> Optional[int]:
 # ─── Dashboard Summary (uses VIEW) ──────────────────────────────────
 @app.get("/api/dashboard/summary")
 def dashboard_summary(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    """Returns KPI counts from the v_dashboard_summary VIEW."""
-    result = db.execute(text("SELECT * FROM v_dashboard_summary"))
+    """Returns KPI counts — company-scoped for company users, global for admins."""
+    cid = get_company_filter(user)
+    if cid:
+        result = db.execute(text("""
+            SELECT
+                1 AS total_companies,
+                (SELECT COUNT(*) FROM supplier WHERE company_id = :cid) AS total_suppliers,
+                (SELECT COUNT(*) FROM product p JOIN supplier s ON p.supplier_id = s.supplier_id WHERE s.company_id = :cid) AS total_products,
+                (SELECT COUNT(*) FROM warehouse) AS total_warehouses,
+                (SELECT COUNT(*) FROM orders WHERE company_id = :cid) AS total_orders,
+                (SELECT COUNT(*) FROM shipment sh JOIN supplier s ON sh.supplier_id = s.supplier_id WHERE s.company_id = :cid) AS total_shipments,
+                (SELECT COUNT(*) FROM inventory i JOIN product p ON i.product_id = p.product_id JOIN supplier s ON p.supplier_id = s.supplier_id WHERE s.company_id = :cid AND i.quantity_available < i.minimum_threshold) AS low_inventory_alerts,
+                (SELECT COUNT(*) FROM shipment sh JOIN supplier s ON sh.supplier_id = s.supplier_id WHERE s.company_id = :cid AND sh.actual_delivery_date IS NULL AND sh.expected_delivery_date < CURRENT_DATE) AS delayed_shipment_alerts,
+                (SELECT COUNT(*) FROM risk_event WHERE resolution_status IN ('Open','Investigating')) AS open_risks
+        """), {"cid": cid})
+    else:
+        result = db.execute(text("SELECT * FROM v_dashboard_summary"))
     row = result.fetchone()
     if row:
         return dict(row._mapping)
@@ -93,16 +110,34 @@ def dashboard_summary(db: Session = Depends(get_db), user: dict = Depends(get_cu
 # ─── Risk Detection ─────────────────────────────────────────────────
 @app.get("/api/risks/low-inventory")
 def low_inventory(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    """Low inventory items from the v_low_inventory VIEW."""
-    result = db.execute(text("SELECT * FROM v_low_inventory"))
+    """Low inventory items — company-scoped for company users."""
+    cid = get_company_filter(user)
+    if cid:
+        result = db.execute(text("""
+            SELECT i.inventory_id, p.product_name, p.category,
+                   s.supplier_name, s.company_id, w.warehouse_name,
+                   i.quantity_available, i.minimum_threshold,
+                   i.inventory_status, i.last_updated
+            FROM inventory i
+            JOIN product p ON i.product_id = p.product_id
+            JOIN supplier s ON p.supplier_id = s.supplier_id
+            JOIN warehouse w ON i.warehouse_id = w.warehouse_id
+            WHERE i.quantity_available < i.minimum_threshold
+              AND s.company_id = :cid
+            ORDER BY (i.minimum_threshold - i.quantity_available) DESC
+        """), {"cid": cid})
+    else:
+        result = db.execute(text("SELECT * FROM v_low_inventory"))
     return rows_to_dicts(result)
 
 
 @app.get("/api/risks/delayed-shipments")
 def delayed_shipments(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    """Detect shipments that are overdue."""
-    result = db.execute(text("""
+    """Detect shipments that are overdue — company-scoped for company users."""
+    cid = get_company_filter(user)
+    base_query = """
         SELECT sh.shipment_id, p.product_name, s.supplier_name,
+               s.company_id,
                sh.quantity_shipped, sh.expected_delivery_date,
                sh.shipment_status, sh.transport_mode,
                (CURRENT_DATE - sh.expected_delivery_date) AS days_overdue
@@ -111,8 +146,11 @@ def delayed_shipments(db: Session = Depends(get_db), user: dict = Depends(get_cu
         JOIN supplier s ON sh.supplier_id = s.supplier_id
         WHERE sh.actual_delivery_date IS NULL
           AND sh.expected_delivery_date < CURRENT_DATE
-        ORDER BY sh.expected_delivery_date ASC
-    """))
+    """
+    if cid:
+        base_query += " AND s.company_id = :cid"
+    base_query += " ORDER BY sh.expected_delivery_date ASC"
+    result = db.execute(text(base_query), {"cid": cid} if cid else {})
     return rows_to_dicts(result)
 
 
@@ -243,17 +281,39 @@ def get_orders(db: Session = Depends(get_db), user: dict = Depends(get_current_u
 
 @app.get("/api/risks")
 def get_risks(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    result = db.execute(text(
-        "SELECT * FROM risk_event ORDER BY detected_date DESC, risk_id DESC"
-    ))
+    cid = get_company_filter(user)
+    if cid:
+        # Filter risks to those related to this company's suppliers
+        result = db.execute(text("""
+            SELECT DISTINCT r.* FROM risk_event r
+            LEFT JOIN shipment sh ON r.entity_type = 'Shipment' AND r.entity_id = sh.shipment_id
+            LEFT JOIN inventory inv ON r.entity_type = 'Inventory' AND r.entity_id = inv.inventory_id
+            LEFT JOIN product p_inv ON inv.product_id = p_inv.product_id
+            LEFT JOIN supplier s ON sh.supplier_id = s.supplier_id
+                                 OR p_inv.supplier_id = s.supplier_id
+            WHERE s.company_id = :cid
+            ORDER BY r.detected_date DESC, r.risk_id DESC
+        """), {"cid": cid})
+    else:
+        result = db.execute(text(
+            "SELECT * FROM risk_event ORDER BY detected_date DESC, risk_id DESC"
+        ))
     return rows_to_dicts(result)
 
 
 # ─── Supplier Reliability (uses VIEW) ──────────────────────────────
 @app.get("/api/suppliers/reliability")
 def supplier_reliability(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    """Supplier reliability from the v_supplier_performance VIEW."""
-    result = db.execute(text("SELECT * FROM v_supplier_performance"))
+    """Supplier reliability — company-scoped for company users."""
+    cid = get_company_filter(user)
+    if cid:
+        result = db.execute(text("""
+            SELECT vp.* FROM v_supplier_performance vp
+            JOIN supplier s ON vp.supplier_id = s.supplier_id
+            WHERE s.company_id = :cid
+        """), {"cid": cid})
+    else:
+        result = db.execute(text("SELECT * FROM v_supplier_performance"))
     return rows_to_dicts(result)
 
 
@@ -366,7 +426,10 @@ def detect_risks(db: Session = Depends(get_db), user: dict = Depends(get_current
     """
     Run the fn_detect_all_risks() stored function.
     Scans inventory + shipments and creates new risk events.
+    Admin only — company users cannot trigger global scans.
     """
+    if user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can run risk detection scans")
     result = db.execute(text("SELECT * FROM fn_detect_all_risks()"))
     row = result.fetchone()
     db.commit()

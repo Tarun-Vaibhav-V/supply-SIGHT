@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useFilters } from '../context/FilterContext';
+import { useAuth } from '../context/AuthContext';
 import {
     getDashboardSummary,
     getLowInventory,
@@ -15,6 +16,8 @@ import '../styles/dashboard.css';
 
 export default function Dashboard() {
     const { filters } = useFilters();
+    const { user } = useAuth();
+    const isAdmin = user?.role === 'admin';
     const [summary, setSummary] = useState(null);
     const [lowInv, setLowInv] = useState([]);
     const [delayed, setDelayed] = useState([]);
@@ -128,9 +131,9 @@ export default function Dashboard() {
             {/* KPI Cards — Row 1: Counts */}
             <section className="kpi-grid">
                 {[
-                    { label: 'Companies', value: summary?.total_companies, icon: '🏢' },
-                    { label: 'Suppliers', value: summary?.total_suppliers, icon: '👥' },
-                    { label: 'Products', value: summary?.total_products, icon: '📦' },
+                    { label: isAdmin ? 'Companies' : 'My Company', value: summary?.total_companies, icon: '🏢' },
+                    { label: isAdmin ? 'Suppliers' : 'My Suppliers', value: summary?.total_suppliers, icon: '👥' },
+                    { label: isAdmin ? 'Products' : 'My Products', value: summary?.total_products, icon: '📦' },
                     { label: 'Warehouses', value: summary?.total_warehouses, icon: '🏭' },
                 ].map((kpi, i) => (
                     <div className="kpi-card animate-fade-in" key={i} style={{ animationDelay: `${i * 0.08}s` }}>
@@ -278,9 +281,9 @@ export default function Dashboard() {
                 <span>🛡️ Risk Events Log</span>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <span className="badge badge-danger">{openRisks.length} open</span>
-                    <button className="btn btn-gold" onClick={handleDetect} style={{ fontSize: '0.8rem', padding: '6px 14px' }}>
+                    {isAdmin && <button className="btn btn-gold" onClick={handleDetect} style={{ fontSize: '0.8rem', padding: '6px 14px' }}>
                         🔍 Scan
-                    </button>
+                    </button>}
                 </div>
             </div>
             <section className="data-cards-grid-wide" style={{ marginBottom: '40px' }}>
